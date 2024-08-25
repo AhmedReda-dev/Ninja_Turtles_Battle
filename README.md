@@ -16,4 +16,3 @@
 | topic name                 | topic Data type  | topic Description |
 | :------------------------: | :--------------: | ----------------- |
 | is_game_end                |      String      |  contain the name of Winner |
-=======================================
