@@ -5,7 +5,7 @@
 | topic name                 | topic Data type  | topic Description |
 | :------------------------: | :--------------: | ----------------- |
 | turtle_one/turtle_health   |      int         |                   |
-| turtle_one/turtle_position |   list [x, y, z] |                   |
+| turtle_one/turtle_position |   list [x, y, z] |built in turtlesim |
 | turtle_one/is_attacking    |     boolian      |                   |
 | turtle_one/Num_of_attacks  |       int        |                   |
 
