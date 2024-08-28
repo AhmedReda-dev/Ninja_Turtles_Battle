@@ -1,0 +1,8 @@
+prefix=/home/zeyad/catkin_ws/devel
+
+Name: spawner
+Description: Description of spawner
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 
