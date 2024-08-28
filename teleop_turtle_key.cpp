@@ -1,5 +1,25 @@
+/*
+* This file was tested and ready to be used
+* purpose: control both turtles and send boolean values on is_attacking channels for both turtles
+* make sure to write a logic in game node that check if is_attacking is ture and within range of the turtle to decrement attacker's attacks number
+* and health of the other turtle
+*
+* NOTE!!!! YOU MUST REMOVE (V2) FROM FILE NAME TO USE IT
+*
+* modifications on main file:
+* ---------------------------
+* 1- removed unnecessary keys
+* 2- added attack key for wasd turtle (q key)
+* 3- added attack key for arrows turtle (l key)
+* 4- quit from (e key)
+* 5 - added two functions to publish on is_attacking topics when pressing attacking keys
+*
+* Edited by: Hazem Essam 
+*/
+
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
+#include <std_msgs/Bool.h>
 #include <signal.h>
 #include <stdio.h>
 #ifndef _WIN32
@@ -13,19 +33,14 @@
 #define KEYCODE_LEFT 0x44
 #define KEYCODE_UP 0x41
 #define KEYCODE_DOWN 0x42
-#define KEYCODE_B 0x62
-#define KEYCODE_C 0x63
 #define KEYCODE_W 0x77
 #define KEYCODE_A 0x61
 #define KEYCODE_S 0x73
 #define KEYCODE_D 0x64
-#define KEYCODE_E 0x65
-#define KEYCODE_F 0x66
-#define KEYCODE_G 0x67
-#define KEYCODE_Q 0x71
-#define KEYCODE_R 0x72
-#define KEYCODE_T 0x74
-#define KEYCODE_V 0x76
+#define KEYCODE_E 0x65  // Exit key
+#define KEYCODE_L 0x6C  // Turtle 1 attack key
+#define KEYCODE_Q 0x71  // Turtle 2 attack key
+
 
 class KeyboardReader
 {
@@ -85,54 +100,14 @@ public:
           *c = KEYCODE_DOWN;
           return;
         }
-        else if (buffer.Event.KeyEvent.wVirtualKeyCode == 0x42)
-        {
-          *c = KEYCODE_B;
-          return;
-        }
-        else if (buffer.Event.KeyEvent.wVirtualKeyCode == 0x43)
-        {
-          *c = KEYCODE_C;
-          return;
-        }
-        else if (buffer.Event.KeyEvent.wVirtualKeyCode == 0x44)
-        {
-          *c = KEYCODE_D;
-          return;
-        }
-        else if (buffer.Event.KeyEvent.wVirtualKeyCode == 0x45)
-        {
-          *c = KEYCODE_E;
-          return;
-        }
-        else if (buffer.Event.KeyEvent.wVirtualKeyCode == 0x46)
-        {
-          *c = KEYCODE_F;
-          return;
-        }
-        else if (buffer.Event.KeyEvent.wVirtualKeyCode == 0x47)
-        {
-          *c = KEYCODE_G;
-          return;
-        }
-        else if (buffer.Event.KeyEvent.wVirtualKeyCode == 0x51)
+        else if (buffer.Event.KeyEvent.wVirtualKeyCode == 0x71)
         {
           *c = KEYCODE_Q;
           return;
         }
-        else if (buffer.Event.KeyEvent.wVirtualKeyCode == 0x52)
+        else if (buffer.Event.KeyEvent.wVirtualKeyCode == 0x6C)
         {
-          *c = KEYCODE_R;
-          return;
-        }
-        else if (buffer.Event.KeyEvent.wVirtualKeyCode == 0x54)
-        {
-          *c = KEYCODE_T;
-          return;
-        }
-        else if (buffer.Event.KeyEvent.wVirtualKeyCode == 0x56)
-        {
-          *c = KEYCODE_V;
+          *c = KEYCODE_L;
           return;
         }
         else if (buffer.Event.KeyEvent.wVirtualKeyCode == 0x77)
@@ -150,6 +125,16 @@ public:
           *c = KEYCODE_S;
           return;
         }
+        else if (buffer.Event.KeyEvent.wVirtualKeyCode == 0x64)
+        {
+          *c = KEYCODE_D;
+          return;
+        }
+        else if (buffer.Event.KeyEvent.wVirtualKeyCode == 0x65)
+        {
+	 *c = KEYCODE_E;
+	  return;
+       }
       }
     }
 #endif
@@ -183,6 +168,11 @@ private:
   double linear_, angular_, l_scale_, a_scale_;
   ros::Publisher twist_pub_;
   ros::Publisher twist2pub_;
+  ros::Publisher attack_pub_;
+  ros::Publisher attack2_pub_;
+
+  void turtle1_attack();
+  void turtle2_attack();
   
 };
 
@@ -199,6 +189,19 @@ TeleopTurtle::TeleopTurtle():
 
   twist_pub_ = nh_.advertise<geometry_msgs::Twist>("turtle1/cmd_vel", 1);
   twist2pub_ = nh2.advertise<geometry_msgs::Twist>("turtle2/cmd_vel", 1);
+
+  //----------------------------------------------------------------
+  // Attack publishers
+  attack_pub_ = nh_.advertise<std_msgs::Bool>("turtle1/is_attacking", 10);
+  attack2_pub_ = nh2.advertise<std_msgs::Bool>("turtle2/is_attacking", 10);
+
+  // Initialize attacking state to false
+  std_msgs::Bool msg;
+  msg.data = false;
+  ros::Duration(1).sleep();
+  attack_pub_.publish(msg);
+  attack2_pub_.publish(msg);
+  //----------------------------------------------------------------
 }
 
 void quit(int sig)
@@ -209,10 +212,26 @@ void quit(int sig)
   exit(0);
 }
 
+//--------------------Attacking Publishers------------------------
+void TeleopTurtle::turtle1_attack()
+{
+  std_msgs::Bool msg;
+  msg.data = true;
+  attack_pub_.publish(msg);
+}
+
+void TeleopTurtle::turtle2_attack()
+{
+  std_msgs::Bool msg;
+  msg.data = true;
+  attack2_pub_.publish(msg);
+}
+//----------------------------------------------------------------
 
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "teleop_turtle");
+  
   TeleopTurtle teleop_turtle;
 
   signal(SIGINT,quit);
@@ -223,7 +242,6 @@ int main(int argc, char** argv)
   return(0);
 }
 
-
 void TeleopTurtle::keyLoop()
 {
   char c;
@@ -232,8 +250,9 @@ void TeleopTurtle::keyLoop()
 
   puts("Reading from keyboard");
   puts("---------------------------");
-  puts("Use arrow keys to move the turtle. 'q' to quit.");
-
+  puts("Use arrow keys to move the 1st Turtle, 'l' for attack");
+  puts("Use WASD keys to move the 2nd Turtle, 'q' for attack");
+  puts("Use 'e' to exit.");
 
   for(;;)
   {
@@ -294,6 +313,14 @@ void TeleopTurtle::keyLoop()
         dirty2 = true;
         break;
       case KEYCODE_Q:
+        ROS_DEBUG("2nd Turtle  attacking..");
+        turtle2_attack();
+        break;
+      case KEYCODE_L:
+        ROS_DEBUG("1st Turtle attacking..");
+        turtle1_attack();
+        break;
+      case KEYCODE_E:
         ROS_DEBUG("quit");
         return;
     }
@@ -320,6 +347,5 @@ void TeleopTurtle::keyLoop()
 
   return;
 }
-
 
 
