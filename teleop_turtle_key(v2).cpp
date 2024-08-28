@@ -1,6 +1,6 @@
 /*
-* This file was tested and ready to be used
-* purpose: control both turtles and send boolean values on is_attacking channels for both turtles
+* This file is to be tested and not yet confirmed to be used
+* Used to control both turtles and send boolean values on is_attacking channels for both turtles
 * make sure to write a logic in game node that check if is_attacking is ture and within range of the turtle to decrement attacker's attacks number
 * and health of the other turtle
 *
@@ -13,6 +13,7 @@
 * 3- added attack key for arrows turtle (l key)
 * 4- quit from (e key)
 * 5 - added two functions to publish on is_attacking topics when pressing attacking keys
+* 6 - added two functions to prevent motion and attacks of the turtle after previous attack by 1 sec
 *
 * Edited by: Hazem Essam 
 */
@@ -171,16 +172,22 @@ private:
   ros::Publisher attack_pub_;
   ros::Publisher attack2_pub_;
 
+  ros::Time last_attack_time1 = ros::Time::now() - ros::Duration(1.0);
+  ros::Time last_attack_time2 = ros::Time::now() - ros::Duration(1.0);
+
   void turtle1_attack();
   void turtle2_attack();
+
+  bool turtle1_timer();
+  bool turtle2_timer();
   
 };
 
 TeleopTurtle::TeleopTurtle():
   linear_(0),
   angular_(0),
-  l_scale_(1.5),
-  a_scale_(1.5)
+  l_scale_(2.0),
+  a_scale_(2.0)
 {
   nh_.param("scale_angular", a_scale_, a_scale_);
   nh2.param("scale_angular", a_scale_, a_scale_);
@@ -218,6 +225,7 @@ void TeleopTurtle::turtle1_attack()
   std_msgs::Bool msg;
   msg.data = true;
   attack_pub_.publish(msg);
+  last_attack_time1=ros::Time::now();
 }
 
 void TeleopTurtle::turtle2_attack()
@@ -225,6 +233,20 @@ void TeleopTurtle::turtle2_attack()
   std_msgs::Bool msg;
   msg.data = true;
   attack2_pub_.publish(msg);
+  last_attack_time2=ros::Time::now();
+}
+//----------------------------------------------------------------
+
+//--------------------Turtles Timer-------------------------------
+
+bool TeleopTurtle::turtle1_timer()
+{
+  return(ros::Time::now()-last_attack_time1 >= ros::Duration(1.0));
+}
+
+bool TeleopTurtle::turtle2_timer()
+{
+  return (ros::Time::now()-last_attack_time2 >= ros::Duration(1.0));
 }
 //----------------------------------------------------------------
 
@@ -256,6 +278,7 @@ void TeleopTurtle::keyLoop()
 
   for(;;)
   {
+
     // get the next event from the keyboard  
     try
     {
@@ -269,56 +292,86 @@ void TeleopTurtle::keyLoop()
 
     linear_=angular_=0;
     ROS_DEBUG("value: 0x%02X\n", c);
-  
+
     switch(c)
     {
       case KEYCODE_LEFT:
-        ROS_DEBUG("LEFT");
-        angular_ = 1.0;
-        dirty = true;
+        if(turtle1_timer())
+        {
+          ROS_DEBUG("LEFT");
+          angular_ = 1.0;
+          dirty = true;
+        }
         break;
       case KEYCODE_RIGHT:
-        ROS_DEBUG("RIGHT");
-        angular_ = -1.0;
-        dirty = true;
+        if(turtle1_timer())
+        {
+          ROS_DEBUG("RIGHT");
+          angular_ = -1.0;
+          dirty = true;
+        } 
         break;
       case KEYCODE_UP:
-        ROS_DEBUG("UP");
-        linear_ = 1.0;
-        dirty = true;
+        if(turtle1_timer())
+        {
+          ROS_DEBUG("UP");
+          linear_ = 1.0;
+          dirty = true;
+        }
         break;
       case KEYCODE_DOWN:
-        ROS_DEBUG("DOWN");
-        linear_ = -1.0;
-        dirty = true;
+        if(turtle1_timer())
+        {
+          ROS_DEBUG("DOWN");
+          linear_ = -1.0;
+          dirty = true;          
+        }
         break;
       case KEYCODE_W:
-        ROS_DEBUG("UP2");
-        linear_ = 1.0;
-        dirty2 = true;
+        if(turtle2_timer())
+        {
+          ROS_DEBUG("UP2");
+          linear_ = 1.0;
+          dirty2 = true;
+        }
         break;
       case KEYCODE_A:
-        ROS_DEBUG("LEFT2");
-        angular_ = 1.0;
-        dirty2 = true;
+        if(turtle2_timer())
+        {
+          ROS_DEBUG("LEFT2");
+          angular_ = 1.0;
+          dirty2 = true;
+        }
         break;
       case KEYCODE_S:
-        ROS_DEBUG("DOWN2");
-        linear_ = -1.0;
-        dirty2 = true;
+        if(turtle2_timer())
+        {
+          ROS_DEBUG("DOWN2");
+          linear_ = -1.0;
+          dirty2 = true;
+        }
         break;
       case KEYCODE_D:
-        ROS_DEBUG("RIGHT2");
-        angular_ = -1.0;
-        dirty2 = true;
+        if(turtle2_timer())
+        {
+          ROS_DEBUG("RIGHT2");
+          angular_ = -1.0;
+          dirty2 = true;
+        }
         break;
       case KEYCODE_Q:
-        ROS_DEBUG("2nd Turtle  attacking..");
-        turtle2_attack();
+        if(turtle2_timer())
+        {
+          ROS_DEBUG("2nd Turtle  attacking..");
+          turtle2_attack();
+        }
         break;
       case KEYCODE_L:
-        ROS_DEBUG("1st Turtle attacking..");
-        turtle1_attack();
+        if(turtle1_timer())
+        {
+          ROS_DEBUG("1st Turtle attacking..");
+          turtle1_attack();
+        }
         break;
       case KEYCODE_E:
         ROS_DEBUG("quit");
