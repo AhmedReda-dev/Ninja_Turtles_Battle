@@ -57,31 +57,31 @@ if __name__ == '__main__':
     # reset the game
     reset_game()
     # create first turtle
-    turtle_one = Turtle("turtle_one")
-    turtle_one.spawn(2,2,0)
+    turtle1 = Turtle("turtle1")
+    turtle1.spawn(2,2,0)
     # create second turtle
-    turtle_two = Turtle("turtle_two")
-    turtle_two.spawn(9,2,0)
+    turtle2 = Turtle("turtle2")
+    turtle2.spawn(9,2,0)
     # puplish the 2 turtles
-    turtle_two.start_publishing()
-    turtle_one.start_publishing()
+    turtle2.start_publishing()
+    turtle1.start_publishing()
 
 
 
 """
 those are the topics that puplished after running the script:
-/turtle_one/cmd_vel
-/turtle_one/color_sensor
-/turtle_one/is_attacking
-/turtle_one/pose
-/turtle_one/turtle_health
-/turtle_one/turtle_num_of_attacks
+/turtle1/cmd_vel
+/turtle1/color_sensor
+/turtle1/is_attacking
+/turtle1/pose
+/turtle1/turtle_health
+/turtle1/turtle_num_of_attacks
 
-/turtle_two/cmd_vel
-/turtle_two/color_sensor
-/turtle_two/is_attacking
-/turtle_two/pose
-/turtle_two/turtle_health
-/turtle_two/turtle_num_of_attacks
+/turtle2/cmd_vel
+/turtle2/color_sensor
+/turtle2/is_attacking
+/turtle2/pose
+/turtle2/turtle_health
+/turtle2/turtle_num_of_attacks
 
 """
