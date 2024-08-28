@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import rospy
 from std_msgs.msg import String
-from geometry_msgs.msg import Pose
+from turtlesim.msg import Pose
 from std_msgs.msg import Bool
 from turtlesim.srv import Kill
 import math
@@ -13,7 +13,7 @@ turtles_positions = {'turtle1': Pose(), 'turtle2': Pose()}
 
 def update_position(data, turtle_name):
     
-    rospy.loginfo(f"Updating position for {turtle_name}")
+    #rospy.loginfo(f"Updating position for {turtle_name}")
     turtles_positions[turtle_name] = data
     
 
@@ -27,8 +27,11 @@ def check_attack(msg, turtle_name):
         if check_turtle_in_range():
             if(turtle_name == "turtle1"): # turtle1 attacked turtle2 we update turtle2 health
                 update_health("turtle2") 
+                rospy.loginfo(f"turtle2 has been hit!")
             else : # turtle2 attacked turtle1 we update turtle1 health
                 update_health("turtle1")
+                rospy.loginfo(f"turtle1 has been hit!")
+    check_game_end()
              
 
 """
@@ -39,11 +42,11 @@ please test it
 radius_range = 0.376
 def check_turtle_in_range():
     """function returns true if the 2 turtles in the range of each other"""
-    x1 = turtles_positions['turtle1'].position.x
-    y1 = turtles_positions['turtle1'].position.y
+    x1 = turtles_positions['turtle1'].x
+    y1 = turtles_positions['turtle1'].y
 
-    x2 = turtles_positions['turtle2'].position.x
-    y2 = turtles_positions['turtle2'].position.x
+    x2 = turtles_positions['turtle2'].x
+    y2 = turtles_positions['turtle2'].y
     # get the distance between the 2 turtles
     distance_between_turtles = math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
     
@@ -64,21 +67,22 @@ def update_health(turtle_name):
         del turtle_attacks[turtle]  # Remove turtle from attacks dictionary
         del turtles_positions[turtle]  # Remove turtle from positions dictionary
 
+turtle_count = 2
 def remove_turtle(turtle_name):
     """Remove a turtle from the simulation."""
     reset = rospy.ServiceProxy("/kill", Kill)
     reset(turtle_name)
     rospy.loginfo(f"Removing {turtle_name} from the game.")
+    global turtle_count
+    turtle_count = turtle_count - 1
 
 def check_game_end():
-    
-    # Check if only one turtle remains
-    only_one = len(turtle_health) == 1
+    global turtle_count
 
     # Check if all turtles have exhausted their attacks
     attacks_exhausted = all(attacks == 0 for attacks in turtle_attacks.values())
 
-    if only_one or attacks_exhausted:
+    if turtle_count == 1 or attacks_exhausted:
         end_game()
 
 def end_game():
