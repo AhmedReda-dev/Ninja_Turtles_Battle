@@ -1,6 +1,6 @@
 /*
-* This file is to be tested and not yet confirmed to be used
-* Used to control both turtles and send boolean values on is_attacking channels for both turtles
+* This file was tested and ready to be used
+* purpose: control both turtles and send boolean values on is_attacking channels for both turtles
 * make sure to write a logic in game node that check if is_attacking is ture and within range of the turtle to decrement attacker's attacks number
 * and health of the other turtle
 *
