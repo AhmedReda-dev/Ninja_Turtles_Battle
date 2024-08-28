@@ -1,11 +1,55 @@
 #!/usr/bin/env python3
+
 import rospy
 from std_msgs.msg import String
 from turtlesim.msg import Pose
 from std_msgs.msg import Bool
 from turtlesim.srv import Kill
 import math
+from std_msgs.msg import Int16
+from turtlesim.srv import *
+import threading
 
+class Turtle:
+    def __init__(self, name):
+        self.name = name
+        self.health = 100
+        self.num_of_attacks = 10
+        self.is_attacking = False
+
+    # create turtle
+    def spawn(self, x, y, theta):
+        serv = rospy.ServiceProxy('/spawn', Spawn)
+        serv(x, y, theta, self.name)
+
+    def publish_all(self):
+        rate = rospy.Rate(2)
+
+        health_pub = rospy.Publisher(f"{self.name}/turtle_health", Int16, queue_size=10)
+        num_of_attacks_pub = rospy.Publisher(f"{self.name}/turtle_num_of_attacks", Int16, queue_size=10)
+        is_attacking_pub = rospy.Publisher(f"{self.name}/is_attacking", Bool, queue_size=10)
+
+        while not rospy.is_shutdown():
+            health_msg = self.health
+            num_of_attacks_msg = self.num_of_attacks
+            is_attacking_msg = self.is_attacking
+
+            health_pub.publish(health_msg)
+            num_of_attacks_pub.publish(num_of_attacks_msg)
+            is_attacking_pub.publish(is_attacking_msg)
+            rate.sleep()
+            
+    # to puplish the 2 turtles in parallel
+    # use this to publish
+    def start_publishing(self):
+        publishing_thread = threading.Thread(target=self.publish_all)
+        publishing_thread.start()
+
+# delete the default turtle
+def reset_game():
+    reset = rospy.ServiceProxy("/kill", Kill)
+    reset("turtle1")
+    
 # Initialize dictionaries to store turtle states
 turtle_health = {'turtle1': 100, 'turtle2': 100}  
 turtle_attacks = {'turtle1': 10, 'turtle2': 10}
@@ -101,8 +145,20 @@ def end_game():
     rospy.signal_shutdown('Game Over')
 
 if __name__ == '__main__':
+    # create node
     rospy.init_node('game_engine')
     rospy.loginfo('Node has been started')
+    # reset the game
+    reset_game()
+    # create first turtle
+    turtle1 = Turtle("turtle1")
+    turtle1.spawn(2,2,0)
+    # create second turtle
+    turtle2 = Turtle("turtle2")
+    turtle2.spawn(9,2,0)
+    # publish the 2 turtles
+    turtle2.start_publishing()
+    turtle1.start_publishing()
 
     # Subscribers
     rospy.Subscriber('/turtle1/pose', Pose, update_position, 'turtle1')
