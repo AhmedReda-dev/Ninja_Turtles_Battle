@@ -19,7 +19,7 @@
 
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
-#include <std_msgs/bool.h>
+#include <std_msgs/Bool.h>
 #include <signal.h>
 #include <stdio.h>
 #ifndef _WIN32
@@ -100,7 +100,7 @@ public:
           *c = KEYCODE_DOWN;
           return;
         }
-        else if (buffer.Event.KeyEvent.wVirtualKeyCode == 0x51)
+        else if (buffer.Event.KeyEvent.wVirtualKeyCode == 0x71)
         {
           *c = KEYCODE_Q;
           return;
@@ -125,11 +125,16 @@ public:
           *c = KEYCODE_S;
           return;
         }
-        else if (buffer.Event.KeyEvent.wVirtualKeyCode == 0x44)
+        else if (buffer.Event.KeyEvent.wVirtualKeyCode == 0x64)
         {
           *c = KEYCODE_D;
           return;
         }
+        else if (buffer.Event.KeyEvent.wVirtualKeyCode == 0x65)
+        {
+	 *c = KEYCODE_E;
+	  return;
+       }
       }
     }
 #endif
@@ -310,11 +315,11 @@ void TeleopTurtle::keyLoop()
       case KEYCODE_Q:
         ROS_DEBUG("2nd Turtle  attacking..");
         turtle2_attack();
-        return;
+        break;
       case KEYCODE_L:
         ROS_DEBUG("1st Turtle attacking..");
         turtle1_attack();
-        return;
+        break;
       case KEYCODE_E:
         ROS_DEBUG("quit");
         return;
